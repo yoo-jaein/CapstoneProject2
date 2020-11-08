@@ -1,4 +1,0 @@
-
-<launch>
- <node name="avoid_obs_node" pkg="obstacle_avoidance" type="avoid_obs.py" />
-</launch>
