@@ -1,0 +1,4 @@
+
+<launch>
+ <node name="avoid_obs_node" pkg="caps2" type="avoid_obs.py" />
+</launch>
