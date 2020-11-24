@@ -46,7 +46,7 @@ def detect_and_predict_mask(frame, faceNet, maskNet):
 			face = frame[startY:endY, startX:endX]
 			face = cv2.cvtColor(face, cv2.COLOR_BGR2RGB)
             
-            # 244x244로 크기를 조정하고 사전 처리한다
+            		# 244x244로 크기를 조정하고 사전 처리한다
 			face = cv2.resize(face, (224, 224))
 			face = img_to_array(face)
 			face = preprocess_input(face)
