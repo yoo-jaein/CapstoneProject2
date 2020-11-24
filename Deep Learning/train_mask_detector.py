@@ -1,7 +1,6 @@
-# USAGE
 # python train_mask_detector.py --dataset dataset
 
-# import the necessary packages
+# 필수 패키지들을 import한다
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.applications import MobileNetV2
 from tensorflow.keras.layers import AveragePooling2D
@@ -24,7 +23,7 @@ import numpy as np
 import argparse
 import os
 
-# construct the argument parser and parse the arguments
+# args를 구성한다
 ap = argparse.ArgumentParser()
 ap.add_argument("-d", "--dataset", required=True,
 	help="path to input dataset")

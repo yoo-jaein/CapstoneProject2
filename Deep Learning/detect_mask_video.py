@@ -1,7 +1,6 @@
-# USAGE
 # python detect_mask_video.py
 
-# import the necessary packages
+# 필수 패키지들을 import한다
 from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 from tensorflow.keras.preprocessing.image import img_to_array
 from tensorflow.keras.models import load_model
@@ -15,60 +14,50 @@ import cv2
 import os
 
 def detect_and_predict_mask(frame, faceNet, maskNet):
-	# grab the dimensions of the frame and then construct a blob
-	# from it
+	# blobFromImage를 사용하여 frame을 Caffe 모델에서 사용하는 blob으로 변환한다
 	(h, w) = frame.shape[:2]
 	blob = cv2.dnn.blobFromImage(frame, 1.0, (300, 300),
 		(104.0, 177.0, 123.0))
 
-	# pass the blob through the network and obtain the face detections
+	# blob을 신경망의 입력값으로 넣어주고 얼굴 인식 결과를 얻는다
 	faceNet.setInput(blob)
 	detections = faceNet.forward()
 
-	# initialize our list of faces, their corresponding locations,
-	# and the list of predictions from our face mask network
+	# 얼굴, 얼굴의 위치, 예측도 배열을 초기화한다
 	faces = []
 	locs = []
 	preds = []
 
-	# loop over the detections
 	for i in range(0, detections.shape[2]):
-		# extract the confidence (i.e., probability) associated with
-		# the detection
+		# i번째 detections의 정확도를 confidence에 넣는다
 		confidence = detections[0, 0, i, 2]
 
-		# filter out weak detections by ensuring the confidence is
-		# greater than the minimum confidence
+		# confidence가 최소 신뢰도보다 클 때
 		if confidence > args["confidence"]:
-			# compute the (x, y)-coordinates of the bounding box for
-			# the object
+			# 객체를 둘러싸는 박스의 x, y 좌표 값을 계산한다
 			box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
 			(startX, startY, endX, endY) = box.astype("int")
 
-			# ensure the bounding boxes fall within the dimensions of
-			# the frame
+			# 그 박스가 프레임 내부에 존재하는지 범위를 체크한다
 			(startX, startY) = (max(0, startX), max(0, startY))
 			(endX, endY) = (min(w - 1, endX), min(h - 1, endY))
 
-			# extract the face ROI, convert it from BGR to RGB channel
-			# ordering, resize it to 224x224, and preprocess it
+			# 얼굴 관심영역(ROI)를 추출하고 BGR에서 RGB로 변환한다
 			face = frame[startY:endY, startX:endX]
 			face = cv2.cvtColor(face, cv2.COLOR_BGR2RGB)
+            
+            # 244x244로 크기를 조정하고 사전 처리한다
 			face = cv2.resize(face, (224, 224))
 			face = img_to_array(face)
 			face = preprocess_input(face)
 
-			# add the face and bounding boxes to their respective
-			# lists
+			# 얼굴 관심영역과 박스를 리스트에 추가한다
 			faces.append(face)
 			locs.append((startX, startY, endX, endY))
 
-	# only make a predictions if at least one face was detected
+	# 얼굴이 하나 이상 감지될 때
 	if len(faces) > 0:
-		# for faster inference we'll make batch predictions on *all*
-		# faces at the same time rather than one-by-one predictions
-		# in the above `for` loop
-
+		# 전체에 대해 일괄적으로 예측한다
 		faces = np.array(faces, dtype="float32")
 
 		interpreter = tf.lite.Interpreter(model_path="converted_model.tflite")
@@ -87,11 +76,10 @@ def detect_and_predict_mask(frame, faceNet, maskNet):
 
 		preds = output_data
 
-	# return a 2-tuple of the face locations and their corresponding
-	# locations
+	# 얼굴의 위치와 정확도 튜플을 반환한다
 	return (locs, preds)
 
-# construct the argument parser and parse the arguments
+# args를 구성한다
 ap = argparse.ArgumentParser()
 ap.add_argument("-f", "--face", type=str,
 	default="face_detector",
@@ -103,65 +91,57 @@ ap.add_argument("-c", "--confidence", type=float, default=0.5,
 	help="minimum probability to filter weak detections")
 args = vars(ap.parse_args())
 
-# load our serialized face detector model from disk
+# 얼굴 감지 모델 faceNet을 로드한다
 print("[INFO] loading face detector model...")
 prototxtPath = os.path.sep.join([args["face"], "deploy.prototxt"])
 weightsPath = os.path.sep.join([args["face"],
 	"res10_300x300_ssd_iter_140000.caffemodel"])
 faceNet = cv2.dnn.readNet(prototxtPath, weightsPath)
 
-# load the face mask detector model from disk
+# 마스크 인식 모델 maskNet을 로드한다
 print("[INFO] loading face mask detector model...")
 interpreter = tf.lite.Interpreter(model_path="converted_model.tflite")
 interpreter.allocate_tensors()
 
 maskNet = interpreter
 
-# initialize the video stream and allow the camera sensor to warm up
+# 비디오 스트림을 초기화한다
 print("[INFO] starting video stream...")
 vs = VideoStream(src=0).start()
 time.sleep(2.0)
 
-# loop over the frames from the video stream
+# 비디오 스트림으로부터 frame을 받아온다
 while True:
-	# grab the frame from the threaded video stream and resize it
-	# to have a maximum width of 400 pixels
+	# 비디오 스트림에서 받아온 frame을 리사이즈한다
 	frame = vs.read()
 	frame = imutils.resize(frame, width=500)
 
-	# detect faces in the frame and determine if they are wearing a
-	# face mask or not
+	# frame의 얼굴을 감지하고 마스크를 끼고있는지 판별한다
 	(locs, preds) = detect_and_predict_mask(frame, faceNet, maskNet)
 
-	# loop over the detected face locations and their corresponding
-	# locations
 	for (box, pred) in zip(locs, preds):
-		# unpack the bounding box and predictions
 		(startX, startY, endX, endY) = box
 		(mask, withoutMask) = pred
 
-		# determine the class label and color we'll use to draw
-		# the bounding box and text
+		# 마스크 착용자와 미착용자를 판별하고 분류한다
 		label = "Mask" if mask > withoutMask else "No Mask"
 		color = (0, 255, 0) if label == "Mask" else (0, 0, 255)
 
-		# include the probability in the label
+		# probability를 입력한다
 		label = "{}: {:.2f}%".format(label, max(mask, withoutMask) * 100)
 
-		# display the label and bounding box rectangle on the output
-		# frame
+		# 객체에 박스를 씌우고 분류 결과와 퍼센트를 보여준다
 		cv2.putText(frame, label, (startX, startY - 10),
 			cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 2)
 		cv2.rectangle(frame, (startX, startY), (endX, endY), color, 2)
 
-	# show the output frame
+	# frame을 보여준다
 	cv2.imshow("Frame", frame)
 	key = cv2.waitKey(1) & 0xFF
 
-	# if the `q` key was pressed, break from the loop
+	# q를 입력하면 루프를 멈춘다
 	if key == ord("q"):
 		break
 
-# do a bit of cleanup
 cv2.destroyAllWindows()
 vs.stop()
