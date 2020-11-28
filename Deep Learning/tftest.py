@@ -129,7 +129,7 @@ def image_callback(ros_image_compressed):
 			pub_str = "0"
 			pub.publish(pub_str)
 
-		sub_s = rospy.Subscriber("alert", String, callback2)
+		#sub_s = rospy.Subscriber("alert", String, callback2)
 
 		#label = "Mask" if mask > withoutMask else "No Mask"
 		color = (0, 255, 0) if label == "Mask" else (0, 0, 255)
@@ -147,9 +147,9 @@ def image_callback(ros_image_compressed):
 	cv2.imshow("Frame", frame)
 	key = cv2.waitKey(1) & 0xFF
 
-def callback2(msg):
-	if msg.data == "0":
-		print("[INFO] No mask detected")
+#def callback2(msg):
+#	if msg.data == "0":
+#		print("[INFO] No mask detected")
 
 # construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
@@ -183,12 +183,9 @@ maskNet = load_model(args["model"])
 
 rospy.init_node('image_listener')
 
-rospy.sleep(0.1)
-
 image_topic = "/raspicam_node/image/compressed"
 rospy.Subscriber(image_topic, CompressedImage, image_callback)
 
 
 print("Sub start")
 rospy.spin()
-
