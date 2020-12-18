@@ -18,15 +18,23 @@
 
 ## 개발환경
 - TurtleBot3 Burger (Ubuntu Mate 16.04)  
-- Remote PC (Ubuntu)  
+- Remote PC (Ubuntu Mate 16.04)  
 
-## 시연영상  
+## 시연영상 및 결과보고서
+- https://github.com/yoo-jaein/Mask-Detecting-Turtlebot/tree/master/Document 참고
 
 ## 수행결과
 1. 터틀봇 자율주행
+- 장애물을 피해 주행하기위한 알고리즘 순서도를 만들고 그에 따라 개발했다.
+- 초기 속도와 회전 각도는 환경에 따라 프로그래머가 설정을 바꿀 수 있다.
+- 장애물을 탐지하는 범위와 후에 회전하는 각도 또한 조절할 수 있다.
 
 2. OpenCV와 TensorFlow를 활용한 마스크 착용 여부 판단
+- 얼굴 인식 모델은 caffemodel, 마스크 인식 모델은 tensorflow를 이용했다.
+- 터틀봇의 카메라 영상을 Remote PC에서 받아와 마스크 착용자와 미착용자를 구분하는데 성공했다.
 
 3. 마스크 미착용자에게 주의사항 전달
+- TTS 출력을 위해 스피커를 납땜했다.
 
 ## 참고자료
+- https://github.com/yoo-jaein/Mask-Detecting-Turtlebot/wiki 참고
